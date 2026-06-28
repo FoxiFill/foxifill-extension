@@ -76,7 +76,7 @@ export class Messaging {
       if (tab.id) {
         try {
           await this.sendToContent(tab.id, message);
-        } catch (error) {
+        } catch {
           // Ignore errors for tabs without content scripts
         }
       }

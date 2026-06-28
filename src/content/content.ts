@@ -236,7 +236,7 @@ async function handleAIModelPaste(isManualPaste = false): Promise<void> {
         if (clipboardData.clipboardData) {
           currentDataHash = clipboardData.clipboardData.length.toString() + "_" + clipboardData.clipboardData.substring(0, 10) + "_" + clipboardData.clipboardData.substring(-10);
         }
-      } catch (error) {
+      } catch {
         currentDataHash = clipboardData.clipboardData?.length?.toString() || "";
       }
 
@@ -862,7 +862,7 @@ function createAIProcessingFloatingIcon(): void {
 
   icon.appendChild(logoImg);
 
-  let iconStyle = {};
+  let iconStyle: Partial<CSSStyleDeclaration>;
   if (PageDetector.isAIModelPage()) {
     // 查找输入框或textarea
     const inputElement =

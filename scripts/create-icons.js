@@ -143,7 +143,7 @@ try {
     fs.copyFileSync(logoSrcPath, logoDestPath);
     console.log("Copied original logo for reference");
   }
-} catch (error) {
+} catch {
   console.log("Could not copy original logo (not critical)");
 }
 
