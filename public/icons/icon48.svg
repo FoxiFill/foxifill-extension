@@ -1,0 +1,29 @@
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="grad48" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#F67B26;stop-opacity:1" />
+            <stop offset="50%" style="stop-color:#E56920;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#CC5610;stop-opacity:1" />
+        </linearGradient>
+        <filter id="shadow48" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="1" dy="1" stdDeviation="1" flood-color="#00000020"/>
+        </filter>
+    </defs>
+    
+    <!-- Rounded background -->
+    <rect width="48" height="48" rx="7.199999999999999" ry="7.199999999999999" 
+          fill="url(#grad48)" filter="url(#shadow48)" />
+    
+    <!-- FoxiFill mark -->
+    <text x="24.0" y="31.200000000000003" 
+          font-family="Arial, -apple-system, sans-serif" 
+          font-size="19.200000000000003" 
+          font-weight="bold" 
+          fill="white" 
+          text-anchor="middle" 
+          dominant-baseline="middle">F</text>
+    
+    <!-- Accent dot -->
+    <circle cx="38.400000000000006" cy="9.600000000000001" r="2.4000000000000004" 
+            fill="white" opacity="0.8" />
+</svg>

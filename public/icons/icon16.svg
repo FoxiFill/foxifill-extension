@@ -1,0 +1,29 @@
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="grad16" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#F67B26;stop-opacity:1" />
+            <stop offset="50%" style="stop-color:#E56920;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#CC5610;stop-opacity:1" />
+        </linearGradient>
+        <filter id="shadow16" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="1" dy="1" stdDeviation="1" flood-color="#00000020"/>
+        </filter>
+    </defs>
+    
+    <!-- Rounded background -->
+    <rect width="16" height="16" rx="2.4" ry="2.4" 
+          fill="url(#grad16)" filter="url(#shadow16)" />
+    
+    <!-- FoxiFill mark -->
+    <text x="8.0" y="10.4" 
+          font-family="Arial, -apple-system, sans-serif" 
+          font-size="6.4" 
+          font-weight="bold" 
+          fill="white" 
+          text-anchor="middle" 
+          dominant-baseline="middle">F</text>
+    
+    <!-- Accent dot -->
+    <circle cx="12.8" cy="3.2" r="0.8" 
+            fill="white" opacity="0.8" />
+</svg>
