@@ -32,7 +32,7 @@
         "create-icons": "python3 scripts/create-icons.py",
         "copy-manifest": "cp src/manifest.json dist/",
         "copy-icons": "cp -r public/* dist/ && mkdir -p dist/content && cp dist/content/content.js dist/content.js",
-        "fix-paths": "mkdir -p dist/popup && mv dist/src/popup/popup.html dist/popup/ && rm -rf dist/src && sed -i '' 's|src=\"/|src=\"../|g' dist/popup/popup.html && sed -i '' 's|href=\"/|href=\"../|g' dist/popup/popup.html",
+        "fix-paths": "node scripts/fix-paths.mjs",
         "build:quick": "./scripts/build-prod.sh",
         "preview": "vite preview",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
