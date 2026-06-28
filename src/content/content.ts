@@ -236,7 +236,7 @@ async function handleAIModelPaste(isManualPaste = false): Promise<void> {
         if (clipboardData.clipboardData) {
           currentDataHash = clipboardData.clipboardData.length.toString() + "_" + clipboardData.clipboardData.substring(0, 10) + "_" + clipboardData.clipboardData.substring(-10);
         }
-      } catch (error) {
+      } catch {
         currentDataHash = clipboardData.clipboardData?.length?.toString() || "";
       }
 
