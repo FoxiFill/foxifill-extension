@@ -6,7 +6,6 @@ Uses PIL (Pillow) to generate PNG icons in required extension sizes.
 
 import os
 import sys
-from PIL import Image, ImageDraw, ImageOps
 import argparse
 
 def create_icons():
@@ -36,6 +35,13 @@ def create_icons():
             return True
         print(f"Error: source icon file not found: {source_icon}")
         print("Expected existing icon files in public/icons when building outside the original monorepo.")
+        return False
+
+    try:
+        from PIL import Image
+    except ImportError:
+        print("Error: missing Pillow dependency")
+        print("Install with: pip install Pillow")
         return False
     
     # Create output directory
@@ -146,10 +152,7 @@ def main():
     
     if args.check:
         return 0 if check_dependencies() else 1
-    
-    if not check_dependencies():
-        return 1
-    
+
     success = create_icons()
     return 0 if success else 1
 
