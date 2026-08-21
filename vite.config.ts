@@ -10,7 +10,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        popup: resolve(__dirname, "src/popup/popup.html"),
+        popup: resolve(import.meta.dirname, "src/popup/popup.html"),
       },
       output: {
         entryFileNames: `[name].js`,

@@ -240,25 +240,9 @@ async function handleCaptureForm(tabId?: number) {
 }
 
 /**
- * Clean HTML by removing script and style tags
- */
-function cleanHtml(html: string): string {
-  // 移除所有的 <script> 标签及其内容
-  let cleanedHtml = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
-
-  // 移除所有的 <style> 标签及其内容
-  cleanedHtml = cleanedHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
-
-  return cleanedHtml;
-}
-
-/**
  * Generate prompt text
  */
 function generatePromptText(html: string): string {
-  // 清理HTML，移除script和style标签
-  const cleanedHtml = cleanHtml(html);
-
   return `You are an intelligent form filling assistant. Please analyze the provided HTML to extract form fields and generate appropriate filling suggestions.
 
 <INSTRUCTIONS>
@@ -274,7 +258,7 @@ function generatePromptText(html: string): string {
 </INSTRUCTIONS>
 
 <HTML_SOURCE>
-${cleanedHtml}
+${html}
 </HTML_SOURCE>
 
 <JSON_RESULT>

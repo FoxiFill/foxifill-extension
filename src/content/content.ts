@@ -1,4 +1,5 @@
 import { PageDetector } from "../libs/clipboard";
+import { sanitizeFormHtml } from "../libs/html-sanitizer";
 import { Messaging } from "../libs/messaging";
 import { Storage } from "../libs/storage";
 import { applyFieldMappings, setNativeValue, undoFillSnapshot } from "./form-fill";
@@ -415,8 +416,7 @@ async function handleFormCapture(options: { takeFullPageScreenshot?: boolean } =
     }
 
     addUniqueIds(fields);
-    // 只获取 body 部分的 HTML，减少数据大小
-    const html = document.body.outerHTML;
+    const html = sanitizeFormHtml(document.body.outerHTML);
 
     let screenshot = "";
     if (options.takeFullPageScreenshot) {
