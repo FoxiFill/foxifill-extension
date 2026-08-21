@@ -92,14 +92,14 @@ export class PageDetector {
    * Check if current page is ChatGPT
    */
   static isChatGPT(): boolean {
-    return window.location.hostname.includes("chatgpt.com") || window.location.hostname.includes("chat.openai.com");
+    return isHostOrSubdomain(window.location.hostname, "chatgpt.com") || isHostOrSubdomain(window.location.hostname, "chat.openai.com");
   }
 
   /**
    * Check if current page is DeepSeek
    */
   static isDeepSeek(): boolean {
-    return window.location.hostname.includes("chat.deepseek.com") || window.location.hostname.includes("deepseek.com");
+    return isHostOrSubdomain(window.location.hostname, "deepseek.com");
   }
 
   /**
@@ -125,48 +125,9 @@ export class PageDetector {
   }
 }
 
-/**
- * Clean HTML by removing script and style tags
- */
-function cleanHtml(html: string): string {
-  // 移除所有的 <script> 标签及其内容
-  let cleanedHtml = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
+export function isHostOrSubdomain(hostname: string, allowedDomain: string): boolean {
+  const normalizedHostname = hostname.toLowerCase().replace(/\.$/, "");
+  const normalizedDomain = allowedDomain.toLowerCase().replace(/\.$/, "");
 
-  // 移除所有的 <style> 标签及其内容
-  cleanedHtml = cleanedHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
-
-  return cleanedHtml;
-}
-
-/**
- * Generate prompt for AI with form data (including screenshot)
- */
-export function generatePrompt(html: string, screenshot: string): string {
-  // 清理HTML，移除script和style标签
-  const cleanedHtml = cleanHtml(html);
-
-  const prompt = `你是一个表单填写助手。请分析我提供的网页HTML和截图，提取表单中的每个字段，并为这些字段生成合理的填写建议。
-
-请按照以下要求：
-1. 识别所有表单字段（input, select, textarea等）
-2. 为每个字段生成合适的示例数据
-3. 返回JSON格式，键是字段的唯一ID（我已经为每个表单元素添加了唯一ID），值是建议填写的内容
-4. 最后添加 "foxifill_status": "completed" 表示处理完成
-
-网页HTML（已处理，所有表单元素都有唯一ID）：
-\`\`\`html
-${cleanedHtml}
-\`\`\`
-
-截图数据（base64）：
-${screenshot}
-
-请返回JSON格式的结果：
-{
-  "field_id_1": "建议值1",
-  "field_id_2": "建议值2",
-  "foxifill_status": "completed"
-}`;
-
-  return prompt;
+  return normalizedHostname === normalizedDomain || normalizedHostname.endsWith(`.${normalizedDomain}`);
 }
