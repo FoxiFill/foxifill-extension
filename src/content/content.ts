@@ -1,7 +1,8 @@
 import { PageDetector } from "../libs/clipboard";
 import { Messaging } from "../libs/messaging";
-import { applyFieldMappings, undoFillSnapshot } from "./form-fill";
-import { AIResponse, FieldMapping, FillSnapshot, FormData, FormField, Message } from "../libs/types";
+import { Storage } from "../libs/storage";
+import { applyFieldMappings, setNativeValue, undoFillSnapshot } from "./form-fill";
+import { AIResponse, FieldMapping, FillSnapshot, FormData, FormField, Message, StorageData } from "../libs/types";
 
 /**
  * Content script for FoxiFill extension
@@ -137,12 +138,12 @@ async function handleAIModelPaste(isManualPaste = false): Promise<void> {
       throw new Error("Extension context invalidated. Please reload the page.");
     }
 
-    const clipboardData = await chrome.storage.local.get("clipboardData");
-    if (!clipboardData.clipboardData) {
+    const clipboardData = await Storage.get<string>("clipboardData");
+    if (!clipboardData) {
       throw new Error("No content to paste. Please capture a form first.");
     }
 
-    console.log("Retrieved clipboard data:", clipboardData.clipboardData.substring(0, 200) + "...");
+    console.log("Retrieved clipboard data:", clipboardData.substring(0, 200) + "...");
 
     // 如果是手动粘贴，清除自动粘贴状态，确保能够重新粘贴
     if (isManualPaste) {
@@ -150,20 +151,20 @@ async function handleAIModelPaste(isManualPaste = false): Promise<void> {
       console.log("Manual paste: cleared auto-paste status to allow re-paste");
 
       // 手动粘贴时，确保图片数据也被正确恢复
-      const imageData = await chrome.storage.local.get("clipboardImage");
-      if (imageData.clipboardImage) {
+      const imageData = await Storage.get<string>("clipboardImage");
+      if (imageData) {
         console.log("Manual paste: restoring image to clipboard...");
-        await restoreImageToClipboard(imageData.clipboardImage);
+        await restoreImageToClipboard(imageData);
 
         // 等待图片恢复完成
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
     } else {
       // 自动粘贴时，也恢复图片数据
-      const imageData = await chrome.storage.local.get("clipboardImage");
-      if (imageData.clipboardImage) {
+      const imageData = await Storage.get<string>("clipboardImage");
+      if (imageData) {
         console.log("Auto paste: restoring image to clipboard...");
-        await restoreImageToClipboard(imageData.clipboardImage);
+        await restoreImageToClipboard(imageData);
       }
     }
 
@@ -188,7 +189,7 @@ async function handleAIModelPaste(isManualPaste = false): Promise<void> {
     }
 
     if (!inputElement) {
-      await navigator.clipboard.writeText(clipboardData.clipboardData);
+      await navigator.clipboard.writeText(clipboardData);
       console.log("Content copied to clipboard. Please paste manually.");
       return;
     }
@@ -197,12 +198,12 @@ async function handleAIModelPaste(isManualPaste = false): Promise<void> {
 
     if (inputElement.tagName === "TEXTAREA") {
       const textarea = inputElement as HTMLTextAreaElement;
-      textarea.value = clipboardData.clipboardData;
+      setNativeValue(textarea, clipboardData);
       textarea.dispatchEvent(new Event("input", { bubbles: true }));
       textarea.dispatchEvent(new Event("change", { bubbles: true }));
     } else if (inputElement.contentEditable === "true") {
       const div = inputElement as HTMLDivElement;
-      div.textContent = clipboardData.clipboardData;
+      div.textContent = clipboardData;
       div.dispatchEvent(new Event("input", { bubbles: true }));
       div.dispatchEvent(new Event("change", { bubbles: true }));
     }
@@ -233,11 +234,9 @@ async function handleAIModelPaste(isManualPaste = false): Promise<void> {
     if (isManualPaste) {
       let currentDataHash = "";
       try {
-        if (clipboardData.clipboardData) {
-          currentDataHash = clipboardData.clipboardData.length.toString() + "_" + clipboardData.clipboardData.substring(0, 10) + "_" + clipboardData.clipboardData.substring(-10);
-        }
+        currentDataHash = clipboardData.length.toString() + "_" + clipboardData.substring(0, 10) + "_" + clipboardData.substring(-10);
       } catch {
-        currentDataHash = clipboardData.clipboardData?.length?.toString() || "";
+        currentDataHash = clipboardData.length.toString();
       }
 
       if (currentDataHash) {
@@ -820,14 +819,13 @@ function createFloatingIcon(): void {
   document.body.appendChild(icon);
 
   // 恢复保存的位置
-  chrome.storage.local.get("foxifill-floating-icon-position", (result) => {
-    if (result["foxifill-floating-icon-position"]) {
-      const position = result["foxifill-floating-icon-position"];
+  Storage.get<{ left: string; top: string }>("foxifill-floating-icon-position").then((position) => {
+    if (position) {
       icon.style.right = "auto"; // 清除 right 属性
       icon.style.left = position.left;
       icon.style.top = position.top;
     }
-  });
+  }).catch((error) => console.warn("FoxiFill: Failed to restore floating icon position:", error));
 
   console.log("FoxiFill: Floating icon created and added to page");
 }
@@ -1047,9 +1045,8 @@ function createAIProcessingFloatingIcon(): void {
   document.body.appendChild(icon);
 
   // 恢复保存的位置
-  chrome.storage.local.get("foxifill-ai-floating-icon-position", (result) => {
-    if (result["foxifill-ai-floating-icon-position"]) {
-      const position = result["foxifill-ai-floating-icon-position"];
+  Storage.get<{ left: string; top: string; isUserDragged?: boolean }>("foxifill-ai-floating-icon-position").then((position) => {
+    if (position) {
       icon.style.right = "auto"; // 清除 right 属性
       icon.style.left = position.left;
       icon.style.top = position.top;
@@ -1059,7 +1056,7 @@ function createAIProcessingFloatingIcon(): void {
         isUserDragged = true;
       }
     }
-  });
+  }).catch((error) => console.warn("FoxiFill: Failed to restore AI icon position:", error));
 
   // 自动位置调整功能 - 只在用户未手动拖拽时启用
   if (PageDetector.isAIModelPage()) {
@@ -1156,9 +1153,9 @@ async function checkAndShowFloatingIcon(): Promise<void> {
 
     try {
       if (chrome.runtime?.id) {
-        const result = await chrome.storage.local.get("settings");
-        if (result && result.settings) {
-          showFloatingIcon = result.settings.showFloatingIcon !== false;
+        const settings = await Storage.get<StorageData["settings"]>("settings");
+        if (settings) {
+          showFloatingIcon = settings.showFloatingIcon !== false;
         }
       }
     } catch (error) {
@@ -1303,43 +1300,40 @@ function setupAIModelAutoPaste(): void {
       }
 
       // 检查自动粘贴设置
-      const settingsData = await chrome.storage.local.get("settings");
-      const settings = settingsData.settings || {};
-      const autoPasteEnabled = settings.autoPasteOnChatGPT === true; // 只有明确设置为 true 才启用
+      const settings = await Storage.get<StorageData["settings"]>("settings");
+      const autoPasteEnabled = settings?.autoPasteOnChatGPT === true; // 只有明确设置为 true 才启用
 
       if (!autoPasteEnabled) {
         return; // 自动粘贴功能已禁用
       }
 
       // 检查是否有剪贴板数据
-      const clipboardData = await chrome.storage.local.get("clipboardData");
+      const clipboardData = await Storage.get<string>("clipboardData");
 
-      if (!clipboardData.clipboardData) {
+      if (!clipboardData) {
         return;
       }
 
       // 检查是否已经粘贴过这份数据（防止刷新页面后重复粘贴）
-      const autoPasteStatus = await chrome.storage.local.get("autoPasteStatus");
+      const autoPasteStatus = await Storage.get<{ lastPastedHash?: string }>("autoPasteStatus");
 
       // 安全地生成数据哈希，避免btoa()编码错误
       let currentDataHash = "";
       try {
-        if (clipboardData.clipboardData) {
-          // 使用简单的字符串哈希算法替代btoa
-          currentDataHash = clipboardData.clipboardData.length.toString() + "_" + clipboardData.clipboardData.substring(0, 10) + "_" + clipboardData.clipboardData.substring(-10);
-        }
+        // 使用简单的字符串哈希算法替代btoa
+        currentDataHash = clipboardData.length.toString() + "_" + clipboardData.substring(0, 10) + "_" + clipboardData.substring(-10);
       } catch (error) {
         console.warn("FoxiFill: Error generating data hash:", error);
-        currentDataHash = clipboardData.clipboardData?.length?.toString() || "";
+        currentDataHash = clipboardData.length.toString();
       }
 
-      if (autoPasteStatus.autoPasteStatus?.lastPastedHash === currentDataHash && currentDataHash) {
+      if (autoPasteStatus?.lastPastedHash === currentDataHash && currentDataHash) {
         return; // 这份数据已经粘贴过了
       }
 
       // 检查是否允许自动粘贴（只有在用户主动捕获表单后才允许）
-      const formCaptureStatus = await chrome.storage.local.get("formCaptureStatus");
-      const allowAutoPaste = formCaptureStatus.formCaptureStatus?.allowAutoPaste === true;
+      const formCaptureStatus = await Storage.get<{ allowAutoPaste?: boolean }>("formCaptureStatus");
+      const allowAutoPaste = formCaptureStatus?.allowAutoPaste === true;
 
       if (!allowAutoPaste) {
         console.log("FoxiFill: Auto-paste not allowed - no recent form capture");
@@ -1347,14 +1341,14 @@ function setupAIModelAutoPaste(): void {
       }
 
       // 防止重复粘贴相同的数据
-      if (clipboardData.clipboardData === lastClipboardData && autoPasteTriggered) {
+      if (clipboardData === lastClipboardData && autoPasteTriggered) {
         return;
       }
 
       // 如果输入框为空且有剪贴板数据且还没有触发过自动粘贴
-      if (currentValue.trim() === "" && clipboardData.clipboardData && !autoPasteTriggered) {
+      if (currentValue.trim() === "" && !autoPasteTriggered) {
         autoPasteTriggered = true;
-        lastClipboardData = clipboardData.clipboardData;
+        lastClipboardData = clipboardData;
 
         console.log("FoxiFill: Triggering auto-paste after form capture");
 

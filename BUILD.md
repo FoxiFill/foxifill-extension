@@ -14,6 +14,8 @@ Production build:
 npm run build:prod
 ```
 
+Builds verify the tracked PNG and SVG icon assets before compiling. Icon generation is a separate design-maintenance task and is not required for a clean source build.
+
 One-command release package:
 
 ```bash

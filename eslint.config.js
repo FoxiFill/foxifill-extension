@@ -11,11 +11,9 @@ export default [
   },
   js.configs.recommended,
   {
-    files: ["eslint.config.js", "*.config.{js,ts}", "scripts/**/*.js"],
+    files: ["eslint.config.js", "*.config.{js,ts}", "scripts/**/*.js", "scripts/**/*.mjs"],
     languageOptions: {
-      globals: {
-        ...globals.node,
-      },
+      globals: globals.node,
     },
   },
   {

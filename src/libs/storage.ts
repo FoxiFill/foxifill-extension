@@ -23,7 +23,7 @@ export class Storage {
         if (chrome.runtime.lastError) {
           reject(chrome.runtime.lastError);
         } else {
-          resolve(result[key] || null);
+          resolve((result[key] as T | undefined) ?? null);
         }
       });
     });
