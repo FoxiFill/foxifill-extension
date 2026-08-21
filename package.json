@@ -49,7 +49,7 @@
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "string-similarity-js": "^2.1.4",
-        "zod": "^3.22.4",
+        "zod": "^4.4.3",
         "zustand": "^5.0.15"
     },
     "devDependencies": {
