@@ -85,6 +85,15 @@ function findByLabel(labelText?: string): FillableElement | null {
   return null;
 }
 
+function findByAttribute(attribute: "name" | "aria-label" | "placeholder", value?: string): FillableElement | null {
+  if (!value) {
+    return null;
+  }
+
+  const candidates = document.querySelectorAll<FillableElement>(`input[${attribute}], select[${attribute}], textarea[${attribute}]`);
+  return Array.from(candidates).find((element) => element.getAttribute(attribute) === value) ?? null;
+}
+
 function findElement(mapping: FieldMapping): FillableElement | null {
   const candidates: Array<() => FillableElement | null> = [
     () => {
@@ -112,34 +121,13 @@ function findElement(mapping: FieldMapping): FillableElement | null {
       return null;
     },
     () => {
-      if (!mapping.fieldName) {
-        return null;
-      }
-      const node = document.querySelector(`[name="${mapping.fieldName}"]`);
-      if (node && (node instanceof HTMLInputElement || node instanceof HTMLSelectElement || node instanceof HTMLTextAreaElement)) {
-        return node;
-      }
-      return null;
+      return findByAttribute("name", mapping.fieldName);
     },
     () => {
-      if (!mapping.fieldAriaLabel) {
-        return null;
-      }
-      const node = document.querySelector(`[aria-label="${mapping.fieldAriaLabel}"]`);
-      if (node && (node instanceof HTMLInputElement || node instanceof HTMLSelectElement || node instanceof HTMLTextAreaElement)) {
-        return node;
-      }
-      return null;
+      return findByAttribute("aria-label", mapping.fieldAriaLabel);
     },
     () => {
-      if (!mapping.fieldPlaceholder) {
-        return null;
-      }
-      const node = document.querySelector(`[placeholder="${mapping.fieldPlaceholder}"]`);
-      if (node && (node instanceof HTMLInputElement || node instanceof HTMLSelectElement || node instanceof HTMLTextAreaElement)) {
-        return node;
-      }
-      return null;
+      return findByAttribute("placeholder", mapping.fieldPlaceholder);
     },
     () => findByLabel(mapping.fieldLabel),
   ];
@@ -170,11 +158,39 @@ function createSnapshotItem(element: FillableElement): FillSnapshotItem {
   return item;
 }
 
+export function setNativeValue(element: FillableElement, value: string): void {
+  const prototype = element instanceof HTMLInputElement
+    ? HTMLInputElement.prototype
+    : element instanceof HTMLTextAreaElement
+      ? HTMLTextAreaElement.prototype
+      : HTMLSelectElement.prototype;
+  const setter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
+
+  if (setter) {
+    setter.call(element, value);
+    return;
+  }
+
+  element.value = value;
+}
+
 function fillElement(element: FillableElement, value: string): boolean {
   const tagName = element.tagName.toLowerCase();
   const type = (element as HTMLInputElement).type?.toLowerCase() || "";
 
-  if (tagName === "input" && (type === "checkbox" || type === "radio")) {
+  if (tagName === "input" && type === "radio") {
+    const radioElement = element as HTMLInputElement;
+    const shouldCheck = normalizeText(radioElement.value) === normalizeText(value) || ["true", "1", "yes", "on", "checked"].includes(normalizeText(value));
+    if (!shouldCheck) {
+      return false;
+    }
+    if (!radioElement.checked) {
+      radioElement.click();
+    }
+    return true;
+  }
+
+  if (tagName === "input" && type === "checkbox") {
     const checkboxElement = element as HTMLInputElement;
     const shouldCheck = ["true", "1", "yes", "on", "checked"].includes(value.toLowerCase());
     if (checkboxElement.checked !== shouldCheck) {
@@ -189,7 +205,7 @@ function fillElement(element: FillableElement, value: string): boolean {
 
     for (const option of selectElement.options) {
       if (normalizeText(option.value) === normalizeText(value) || normalizeText(option.textContent || "") === normalizeText(value)) {
-        selectElement.selectedIndex = option.index;
+        setNativeValue(selectElement, option.value);
         optionFound = true;
         break;
       }
@@ -198,7 +214,7 @@ function fillElement(element: FillableElement, value: string): boolean {
     if (!optionFound) {
       for (const option of selectElement.options) {
         if (normalizeText(option.textContent || "").includes(normalizeText(value))) {
-          selectElement.selectedIndex = option.index;
+          setNativeValue(selectElement, option.value);
           optionFound = true;
           break;
         }
@@ -213,7 +229,11 @@ function fillElement(element: FillableElement, value: string): boolean {
     return true;
   }
 
-  element.value = value;
+  if (tagName === "input" && ["button", "file", "hidden", "image", "reset", "submit"].includes(type)) {
+    return false;
+  }
+
+  setNativeValue(element, value);
   element.dispatchEvent(new Event("input", { bubbles: true }));
   element.dispatchEvent(new Event("change", { bubbles: true }));
   return true;
@@ -254,7 +274,13 @@ export function applyFieldMappings(mappings: FieldMapping[]): { success: boolean
 
     snapshot.items.push(createSnapshotItem(element));
 
-    const filled = fillElement(element, mapping.responseValue);
+    let filled: boolean;
+    try {
+      filled = fillElement(element, mapping.responseValue);
+    } catch {
+      errors.push(`Unable to apply value for key: ${mapping.responseKey}`);
+      continue;
+    }
     if (!filled) {
       errors.push(`Unable to apply value for key: ${mapping.responseKey}`);
       continue;
@@ -312,7 +338,7 @@ export function undoFillSnapshot(snapshot?: FillSnapshot): { success: boolean; r
       return;
     }
 
-    element.value = item.previousValue || "";
+    setNativeValue(element, item.previousValue || "");
     element.dispatchEvent(new Event("input", { bubbles: true }));
     element.dispatchEvent(new Event("change", { bubbles: true }));
     restoredCount += 1;

@@ -19,9 +19,27 @@ function collectJsonCandidates(text: string): string[] {
 
   const stack: number[] = [];
   let start = -1;
+  let inString = false;
+  let isEscaped = false;
 
   for (let index = 0; index < text.length; index += 1) {
     const char = text[index];
+
+    if (inString) {
+      if (isEscaped) {
+        isEscaped = false;
+      } else if (char === "\\") {
+        isEscaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
 
     if (char === "{") {
       if (stack.length === 0) {

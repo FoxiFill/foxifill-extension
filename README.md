@@ -1,103 +1,108 @@
 # FoxiFill Extension
 
-FoxiFill is an open-source browser extension that helps users capture web forms, prepare AI-ready prompts, review structured suggestions, and apply the result back to the original page.
+<p align="center">
+  <img src="public/logo.svg" alt="FoxiFill" width="104" height="104">
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-green.svg)](https://chromewebstore.google.com/detail/foxifill/kcbgjmcocblfjphligafgmmabfddfiem)
+<p align="center">
+  A local-first AI form filler for reviewable browser workflows.
+</p>
 
-## Features
+<p align="center">
+  <a href="https://github.com/FoxiFill/foxifill-extension/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/FoxiFill/foxifill-extension/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <a href="https://chromewebstore.google.com/detail/foxifill/kcbgjmcocblfjphligafgmmabfddfiem"><img alt="Chrome Web Store" src="https://img.shields.io/badge/Chrome_Web_Store-install-F67B26"></a>
+</p>
 
-- Capture visible form context from the current browser tab.
-- Generate a structured prompt for an AI chat workflow.
-- Support configurable AI destinations such as ChatGPT and DeepSeek.
-- Preview field mappings before applying suggestions.
-- Undo the most recent fill operation.
-- Keep the core capture and fill workflow local to the browser extension.
+FoxiFill helps you capture form context, prepare an AI-ready prompt, review structured suggestions, and apply approved values back to the original page. The core capture, matching, review, fill, and undo workflow runs in the browser; you decide what to send to an AI chat and what to apply.
 
-## Install From Source
+## Why FoxiFill
 
-Requirements:
+- **Review before fill:** inspect mappings and disable anything that should not be applied.
+- **Local-first control:** no FoxiFill server is required for the core workflow.
+- **Works with real browser forms:** supports text fields, text areas, selects, checkboxes, and radio buttons.
+- **Recoverable changes:** undo the most recent fill operation.
+- **Open source:** inspect the extension, report issues, and contribute under the MIT license.
 
-- Node.js 18 or newer
-- npm
-- Chrome or another Chromium-based browser
+## Install
+
+The easiest option is the [Chrome Web Store listing](https://chromewebstore.google.com/detail/foxifill/kcbgjmcocblfjphligafgmmabfddfiem).
+
+To install from source:
 
 ```bash
 git clone https://github.com/FoxiFill/foxifill-extension.git
 cd foxifill-extension
 npm ci
-npm run build
+npm run check
+npm run build:prod
+npm run verify:build
 ```
 
-Load the built extension:
+Then open `chrome://extensions/`, enable Developer mode, select **Load unpacked**, and choose the generated `dist` directory.
 
-1. Open `chrome://extensions/`.
-2. Enable Developer mode.
-3. Select Load unpacked.
-4. Choose the `dist` directory.
+## How it works
+
+1. Open a page containing a form and choose **Capture Form**.
+2. Open your selected AI chat with the prepared prompt.
+3. Copy the completed structured response back to FoxiFill.
+4. Review the proposed field mappings.
+5. Apply the enabled values, or undo the latest fill if needed.
+
+FoxiFill fills fields but does not submit the form for you.
 
 ## Development
 
-```bash
-npm ci
-npm run dev
-npm run type-check
-npm run lint
-```
+Requirements:
 
-Production build:
+- Node.js 20.19 or newer
+- npm 10 or newer
+- Chrome or another Chromium-based browser
 
-```bash
-npm run build:prod
-```
+Commands:
 
-Release package:
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Run the popup development server |
+| `npm run type-check` | Check TypeScript without emitting files |
+| `npm run lint` | Run ESLint with zero warnings allowed |
+| `npm test` | Run unit and DOM behavior tests |
+| `npm run check` | Run the pre-commit type, lint, and test gate |
+| `npm run build:prod` | Build the minified extension |
+| `npm run verify:build` | Verify required Manifest V3 artifacts |
+| `npm run audit:prod` | Audit production dependencies |
 
-```bash
-npm run build:quick
-```
+See [BUILD.md](BUILD.md) for packaging and browser-loading details.
 
-The generated `dist/` directory and release zip files are build artifacts and should not be committed.
-
-## Project Structure
+## Project structure
 
 ```text
 src/
-  background/   Extension service worker
-  content/      Content scripts for form detection and filling
-  libs/         Shared utilities, schemas, types, and storage helpers
-  popup/        React popup UI
-  styles/       Shared CSS
-public/
-  icons/        Extension icons
-  models/       AI destination logos
-scripts/        Build and asset helper scripts
+  background/  Service worker and workflow coordination
+  content/     Form capture, matching, fill, and undo behavior
+  libs/        Shared parsers, schemas, storage, types, and messaging
+  popup/       React popup interface and state
+public/        Icons and bundled visual assets
+scripts/       Build and artifact verification helpers
 ```
 
-## Permissions
+## Permissions and privacy
 
-FoxiFill requests permissions required for the extension workflow:
+FoxiFill requests only the permissions needed for its user-initiated browser workflow:
 
-- `activeTab`: capture context from the active tab after user action.
-- `storage`: store workflow state, settings, form snapshots, and undo data.
-- `clipboardWrite`: prepare AI prompts and supporting content for user-controlled paste flows.
-- `scripting`: interact with page forms through content scripts.
-- `tabs`: manage the capture-to-AI workflow across browser tabs.
-- `contextMenus`: expose quick actions from the page context menu.
-- `<all_urls>` host permission: allow form capture and fill workflows across user-selected websites.
+- `activeTab` and `scripting` to inspect and fill the active page after user action.
+- `storage` to keep settings and recoverable workflow state locally.
+- `clipboardWrite` to prepare content for a user-controlled AI chat workflow.
+- `tabs` to coordinate the original form and selected AI tab.
+- `contextMenus` to expose quick actions.
+- `<all_urls>` so the same workflow can work on user-selected form pages.
 
-Any permission change should be documented in the pull request.
+Permission changes require explicit pull-request documentation. Never include credentials, private form content, or personal data in issues, tests, screenshots, or logs. See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
-## Privacy
+## Contributing and support
 
-FoxiFill is designed around user-controlled capture, review, and apply steps. The extension does not require a FoxiFill server to process captured form data. Users decide what content to send to their selected AI destination.
-
-See [SECURITY.md](SECURITY.md) for vulnerability reporting.
-
-## Contributing
-
-Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Use [GitHub Issues](https://github.com/FoxiFill/foxifill-extension/issues) for reproducible bugs and focused feature requests. Security reports must follow [SECURITY.md](SECURITY.md), not public issues.
 
 ## License
 
-FoxiFill Extension is released under the [MIT License](LICENSE).
+FoxiFill Extension is available under the [MIT License](LICENSE).

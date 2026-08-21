@@ -29,14 +29,20 @@
         "build-content-prod": "esbuild src/content/content.ts --bundle --format=iife --outfile=dist/content/content.js --platform=browser --target=es2020 --minify",
         "build-background": "esbuild src/background/sw.ts --bundle --format=iife --outfile=dist/background/sw.js --platform=browser --target=es2020",
         "build-background-prod": "esbuild src/background/sw.ts --bundle --format=iife --outfile=dist/background/sw.js --platform=browser --target=es2020 --minify",
-        "create-icons": "python3 scripts/create-icons.py",
+        "create-icons": "npm run verify:icons",
         "copy-manifest": "cp src/manifest.json dist/",
         "copy-icons": "cp -r public/* dist/ && mkdir -p dist/content && cp dist/content/content.js dist/content.js",
         "fix-paths": "node scripts/fix-paths.mjs",
         "build:quick": "./scripts/build-prod.sh",
         "preview": "vite preview",
-        "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-        "type-check": "tsc --noEmit"
+        "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+        "type-check": "tsc --noEmit",
+        "verify:icons": "node scripts/verify-icons.mjs",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "check": "npm run type-check && npm run lint && npm test",
+        "audit:prod": "npm audit --omit=dev --audit-level=high",
+        "verify:build": "node scripts/verify-build.mjs"
     },
     "dependencies": {
         "css-selector-generator": "^3.6.7",
@@ -61,9 +67,11 @@
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-react-refresh": "^0.5.3",
         "globals": "^17.7.0",
+        "jsdom": "^26.1.0",
         "postcss": "^8.5.15",
         "tailwindcss": "^4.3.1",
         "typescript": "^5.2.2",
-        "vite": "^8.1.0"
+        "vite": "^8.1.0",
+        "vitest": "^4.1.11"
     }
 }
