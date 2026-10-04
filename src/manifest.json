@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "FoxiFill",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Intelligent form filling assistant that captures web forms and generates AI-powered suggestions for automatic completion",
     "permissions": [
         "activeTab",
