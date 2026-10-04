@@ -1,6 +1,6 @@
 {
     "name": "foxifill-extension",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "AI-powered local-first browser extension for form capture and autofill workflows",
     "type": "module",
     "license": "MIT",
