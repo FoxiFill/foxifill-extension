@@ -60,7 +60,7 @@ export function validateAIResponse(data: unknown): { success: boolean; data?: an
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Invalid AI response format: ${error.errors.map((e) => e.message).join(", ")}`,
+        error: `Invalid AI response format: ${error.issues.map((e) => e.message).join(", ")}`,
       };
     }
     return { success: false, error: "Unknown validation error" };
@@ -78,7 +78,7 @@ export function validateFormData(data: unknown): { success: boolean; data?: any;
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Invalid form data: ${error.errors.map((e) => e.message).join(", ")}`,
+        error: `Invalid form data: ${error.issues.map((e) => e.message).join(", ")}`,
       };
     }
     return { success: false, error: "Unknown validation error" };
