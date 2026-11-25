@@ -45,7 +45,7 @@
         "verify:build": "node scripts/verify-build.mjs"
     },
     "dependencies": {
-        "css-selector-generator": "^3.9.4",
+        "css-selector-generator": "^3.9.5",
         "dompurify": "3.4.18",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
